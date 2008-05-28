@@ -1,0 +1,57 @@
+#!/usr/bin/python
+
+import cgi
+import urllib
+import math
+
+
+def deg2rad (a):
+    return a * (math.pi / 180.0)
+
+
+def tile2zunit (t, z):
+    return t << (z+8)
+
+
+def unit2latlon (x, y):
+    wsu = 2 << 28
+    mspan = -6.28318377773622
+    mtop = 3.14159188886811
+    lon = x * (360.0 / wsu) - 180.0
+    lat = 360.0 * (math.atan (math.exp (y * (mspan / wsu) + mtop))) * (1.0 / math.pi) - 90.0
+    return [lat, lon]
+
+
+def geod2merc (lat, lon):
+    Rn = 6378137.0
+    e = 0.0818191908426
+    esinLat = e * math.sin(lat)
+
+    tan_temp = math.tan(math.pi / 4.0 + lat / 2.0)
+    pow_temp = math.pow (math.tan (math.pi / 4.0 + math.asin (esinLat) / 2), e)
+    U = tan_temp / pow_temp
+    
+    return [Rn * lon, Rn * math.log(U)]
+
+
+args = cgi.FieldStorage ()
+
+x = int (args["x"].value)
+y = int (args["y"].value)
+z = int (args["zoom"].value) + 4
+
+gx = tile2zunit (x, z)
+gy = tile2zunit (y, z)
+
+[lat,lon] = unit2latlon (gx, gy);
+[x, y] = geod2merc (deg2rad (lat), deg2rad (lon))
+[tx, ty] = [(x + 20037508.342789) * 53.5865938, (20037508.342789 - y) * 53.5865938]
+
+# print "Content-Type: text/plain"
+# print
+# print tx, ty, z
+
+print "Content-Type: image/png"
+print
+f = urllib.urlopen ("http://base03.maps.yandex.net/tiles/2000/?layer=1&x=%(x)d&y=%(y)d&scale=%(z)d" % { "x" : int (tx), "y" : int (ty), "z" : z})
+print f.read ()
