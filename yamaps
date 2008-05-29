@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import sys
 import cgi
 import urllib
 import math
@@ -33,12 +34,18 @@ def geod2merc (lat, lon):
     
     return [Rn * lon, Rn * math.log(U)]
 
+cmd = 0
 
-args = cgi.FieldStorage ()
-
-x = int (args["x"].value)
-y = int (args["y"].value)
-z = int (args["zoom"].value) + 4
+if cmd > 0:
+    [x,y,z] = map (int, sys.argv[1:])
+    z += 4
+    l = 1
+else:
+    args = cgi.FieldStorage ()
+    x = int (args["x"].value)
+    y = int (args["y"].value)
+    z = int (args["zoom"].value) + 4
+    l = int (args["layer"].value)
 
 gx = tile2zunit (x, z)
 gy = tile2zunit (y, z)
@@ -53,5 +60,11 @@ gy = tile2zunit (y, z)
 
 print "Content-Type: image/png"
 print
-f = urllib.urlopen ("http://base03.maps.yandex.net/tiles/2000/?layer=1&x=%(x)d&y=%(y)d&scale=%(z)d" % { "x" : int (tx), "y" : int (ty), "z" : z})
-print f.read ()
+
+url = "http://base03.maps.yandex.net/tiles/2000/?layer=%(l)d&x=%(x)d&y=%(y)d&scale=%(z)d" % { "l" : l, "x" : int (tx), "y" : int (ty), "z" : z+2}
+
+if cmd > 0:
+    print url
+else:
+    f = urllib.urlopen (url)
+    print f.read ()
