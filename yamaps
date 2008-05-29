@@ -2,7 +2,7 @@
 
 import sys
 import cgi
-import urllib
+import httplib
 import math
 
 
@@ -58,13 +58,18 @@ gy = tile2zunit (y, z)
 # print
 # print tx, ty, z
 
-print "Content-Type: image/png"
-print
-
-url = "http://base03.maps.yandex.net/tiles/2000/?layer=%(l)d&x=%(x)d&y=%(y)d&scale=%(z)d" % { "l" : l, "x" : int (tx), "y" : int (ty), "z" : z+2}
+srv = "base03.maps.yandex.net"
+req = "/tiles/2000/?layer=%(l)d&x=%(x)d&y=%(y)d&scale=%(z)d" % { "l" : l, "x" : int (tx), "y" : int (ty), "z" : z+2}
 
 if cmd > 0:
-    print url
+    print "http://%(srv)s%(req)s" % {"srv" : srv, "req" : req}
 else:
-    f = urllib.urlopen (url)
-    print f.read ()
+    conn = httplib.HTTPConnection (srv)
+    conn.request ("GET", req)
+    r = conn.getresponse ()
+    
+    print "Status:", r.status, r.reason
+    print "Content-Type:", r.getheader ("Content-Type")
+    print
+    print r.read ()
+    conn.close ()
