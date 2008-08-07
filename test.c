@@ -23,23 +23,36 @@ void geod2merc (double lat, double lon, double* x, double* y)
 }
 
 
+#define MAX_ZOOM (20)
+#define TILE_SIZE_P2 (8)
+#define unit2ztile(unit, ZOOM) ((unit) >> (TILE_SIZE_P2 + (ZOOM)))
 
 
 int main ()
 {
-    double lat = 55.75438;
-    double lon = 37.80950;
+    double lat = 55.75698;
+    double lon = 37.62435;
 
-    double x, y, tx, ty;
+    double x, y;
+    unsigned int tx, ty;
+    unsigned int xx, yy, zoom, sz;
     
+    sz = 4;
+
     geod2merc (deg2rad (lat), deg2rad (lon), &x, &y);
     
     tx = (x + 20037508.342789) * 53.5865938;
     ty = (20037508.342789 - y) * 53.5865938;
 
-    printf ("%f, %f\n", tx, ty);
+    printf ("%u, %u\n", tx, ty);
 
-    printf ("http://base03.maps.yandex.net/tiles/2000/?layer=1&x=%lld&y=%lld&scale=6\n", (unsigned long long)tx, (unsigned long long)ty);
+    for (zoom = sz; zoom < sz+4; zoom++) {
+        xx = unit2ztile (tx, zoom);
+        yy = unit2ztile (ty, zoom);
+
+        printf ("%u, %u, %u\n", xx, yy, zoom);
+        printf ("http://vec.maps.yandex.net/tiles?l=map&v=1.0.0&x=%d&y=%d&z=%d\n", xx, yy, MAX_ZOOM + 3 - zoom);
+    }
 
     return 0;
 }
