@@ -30,44 +30,18 @@ z = 23 - z
 x <<= 8+z
 y <<= 8+z
 
-# obtain timestamp
-ts_cache = "/tmp/maps-"+city+"-ts.txt"
+srv = "traffic.maps.yandex.net"
+req = "/tiles/2000?layer=%(l)d&timestamp=last&x=%(x)d&y=%(y)d&scale=%(z)d" % { "l" : l, "x" : x, "y" : y, "z" : z}
 
-try:
-    f = open (ts_cache, "r");
-    ts = int (f.read ())
-    f.close ()
-except IOError:
-    ts = 0
+if cmd > 0:
+    print "http://%(srv)s%(req)s" % {"srv" : srv, "req" : req}
+else:
+    conn = httplib.HTTPConnection (srv)
+    conn.request ("GET", req)
+    r = conn.getresponse ()
 
-# if timestamp not found or timestamp cache is older than 5 minutes, refresh timestamp
-if ts == 0 or time.time () - ts > 300:
-    f = urllib.urlopen ("http://info.maps.yandex.net/traffic/current/stat.txt")
-
-    for v in f.readlines ():
-        r = re.search ("(\d+)\t\d+:\d+\t(\d+)", v).group (1, 2)
-        if int(r[0]) == city_id:
-            ts = int(r[1])
-
-    # write in cache
-    f = open (ts_cache, "w")
-    f.write (str (ts))
-    f.close ()
-
-# ok, we have timestamp
-if ts != 0:
-    srv = "traffic.maps.yandex.net"
-    req = "/tiles/2000?layer=%(l)d&timestamp=%(ts)d&x=%(x)d&y=%(y)d&scale=%(z)d" % { "l" : l, "ts" : int (ts), "x" : x, "y" : y, "z" : z}
-
-    if cmd > 0:
-        print "http://%(srv)s%(req)s" % {"srv" : srv, "req" : req}
-    else:
-        conn = httplib.HTTPConnection (srv)
-        conn.request ("GET", req)
-        r = conn.getresponse ()
-
-        print "Status:", r.status, r.reason
-        print "Content-Type:", r.getheader ("Content-Type")
-        print
-        print r.read ()
-        conn.close ()
+    print "Status:", r.status, r.reason
+    print "Content-Type:", r.getheader ("Content-Type")
+    print
+    print r.read ()
+    conn.close ()
