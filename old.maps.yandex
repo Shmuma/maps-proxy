@@ -4,11 +4,9 @@ import sys
 import cgi
 import httplib
 
-# http://maemo.shmuma.ru/proxy/maps.yandex?x=4955&y=2567&zoom=13&city=msk
+# http://maemo.shmuma.ru/proxy/old.maps.yandex?x=4955&y=2567&zoom=13&map=msk
 
 cmd = 0
-
-l = 4
 
 if cmd > 0:
     [x,y,z] = map (int, sys.argv[1:])
@@ -18,17 +16,18 @@ else:
     x = int (args["x"].value)
     y = int (args["y"].value)
     z = int (args["zoom"].value)
-    city = args["city"].value
+    map = args["map"].value
 
-cities = {'msk' : 2000, 'kiev' : 20544, 'spb' : 10174, 'ekb' : 11162}
-city_id = cities[city]
+maps = {'msk' : 2000, 'kiev' : 1600, 'dnepr' : 2300, 'donezk' : 2400, 'zap' : 2700, 
+          'crimea' : 1700, 'lvov' : 2600, 'odessa' : 1900, 'kharkov' : 2500, 'europe' : 2200}
+map_id = maps[map]
 
 z = 23 - z
 x <<= 8+z
 y <<= 8+z
 
-srv = "traffic.maps.yandex.net"
-req = "/tiles/%(id)d?layer=%(l)d&timestamp=last&x=%(x)d&y=%(y)d&scale=%(z)d" % { "id" : city_id, "l" : l, "x" : x, "y" : y, "z" : z}
+srv = "base.maps.yandex.net"
+req = "/tiles/%(id)d?layer=1&x=%(x)d&y=%(y)d&scale=%(z)d" % { "id" : map_id, "x" : x, "y" : y, "z" : z}
 
 if cmd > 0:
     print "http://%(srv)s%(req)s" % {"srv" : srv, "req" : req}
