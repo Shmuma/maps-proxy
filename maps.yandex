@@ -20,7 +20,7 @@ else:
     z = int (args["zoom"].value)
     city = args["city"].value
 
-cities = {'msk' : 2000, 'kiev' : 20544, 'spb' : 10174, 'ekb' : 11162}
+cities = {'msk' : 2000, 'kiev' : 1600, 'spb' : 500, 'ekb' : 700}
 city_id = cities[city]
 
 z = 23 - z
