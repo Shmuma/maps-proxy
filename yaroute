@@ -1,0 +1,148 @@
+#!/usr/bin/python
+# coding=UTF8
+
+#import cgitb; cgitb.enable()
+import sys
+import cgi
+import httplib
+import urllib
+import base64
+import string
+
+print "Content-Type: text/xml"
+print
+
+cmd = 0
+
+if cmd == 0:
+    args = cgi.FieldStorage ()
+    f = args["from"].value.replace (" ", "")
+    t = args["to"].value.replace (" ", "")
+else:
+#    f = "Самокатная, 1"
+#    t = "Зеленый проспект, 65"
+    f = "55.753317,37.808087"
+    t = "55.730810,37.736687"
+
+def handleLatLon (s):
+    if len (s.translate (string.maketrans ("", ""), '0123456789.,')) == 0:
+        v = s.split (",")
+        s = v[1] + "," + v[0]
+    return s
+
+f = handleLatLon (f)
+t = handleLatLon (t)
+
+#print f + " -> " + t
+
+# obtain route directives
+req = urllib.quote (f)+"~"+urllib.quote (t)
+srv = "beta-maps.yandex.ru"
+url = "/ajax/route.xml?rt=" + req + "&output=js"
+
+#print url
+
+conn = httplib.HTTPConnection (srv);
+conn.request ("GET", url);
+r = conn.getresponse ();
+data = r.read ().replace ("\\", "")
+conn.close ();
+
+#print data;
+
+# parse data
+# segments
+s_ind = data.find ("\"segments\"")
+
+if s_ind == -1:
+    exit ()
+
+s_ind = data.find ("[", s_ind)+1;
+e_ind = data.find ("]", s_ind);
+
+segs = data[s_ind+1:e_ind-1].split ("},{")
+
+#print "Segments:"
+# parse segments
+segments = {}
+for seg in segs:
+    attrs = seg.split (",")
+    lon = float (attrs[0].split (":")[2])
+    lat = float (attrs[1].split (":")[1].replace ("}", ""))
+    length = float (attrs[2].split (":")[1])
+    street = attrs[3].split (":")[1]
+    exit = int (attrs[4].split (":")[1])
+    dir  = int (attrs[5].split (":")[1])
+    
+    key = "%(lon)0.6f,%(lat)0.6f" % { "lon": lon, "lat": lat }
+    key = key.replace (".", "")
+    segments[key] = [lon, lat, length, street.replace ('"', ''), exit, dir]
+
+#    print "%(lon)f, %(lat)f, %(len)f, %(street)s, %(exit)d, %(dir)d" % { "lon": lon, "lat": lat, "len": length, "street": street, "exit": exit, "dir": dir}
+
+
+def description (s):
+    res = ""
+    if s[5] != 0:
+        res += ['Прямо', 'Правее', 'Направо', 'Направо', 'Разворот', 'Налево', 'Налево', 'Левее'][s[5]] + ", "
+    if s[4] != 0:
+        if res == "":
+            res += "Съезд, "
+        else:
+            res += "съезд, "
+    res += s[3] + ", расстояние %(len).2f км." % {"len": s[2]/1000}
+    return res
+
+
+# encoded points
+s_ind = data.find ("\"encodedPoints\"")
+
+if s_ind == -1:
+    exit ()
+
+s_ind = data.find (":", s_ind)+2
+e_ind = data.find ("\"levels\"", s_ind)-2
+
+enc_pts = data[s_ind:e_ind]
+
+pts = base64.b64decode (enc_pts, "-_");
+
+# GPX header
+print '<?xml version="1.0" encoding="UTF-8"?>'
+print '<gpx version="1.0" creator="http://maemo.shmuma.ru/proxy/yaroute" xmlns="http://www.topografix.com/GPX/1/0">'
+print '  <trk>'
+print '    <trkseg>'
+
+# process encoded points
+i = 0
+while i < len(pts):
+    v1 = ord (pts[i+3])*16777216 + ord (pts[i+2])*65536 + ord (pts[i+1])*256 + ord (pts[i]);
+    i += 4;
+    v2 = ord (pts[i+3])*16777216 + ord (pts[i+2])*65536 + ord (pts[i+1])*256 + ord (pts[i]);
+    if v1 > 2147483648:
+        v1 -= 4294967296
+    if v2 > 2147483648:
+        v2 -= 4294967296
+
+    if i == 4:
+        lon = v1
+        lat = v2
+    else:
+        lon += v1
+        lat += v2
+
+    print ' '*6 + '<trkpt lat="%(lat1)d.%(lat2)06d" lon="%(lon1)d.%(lon2)06d"' % { "lat1": lat // 1000000, "lat2": lat % 1000000, 
+                                                                                   "lon1": lon // 1000000, "lon2": lon % 1000000 },
+    key = "%(lon)d,%(lat)d" % { "lon": lon, "lat": lat };
+    if key in segments:
+        print '>'
+        print ' '*8 + "<desc>" + description (segments[key]) + "</desc>"
+        print ' '*6 + "</trkpt>"
+    else:
+        print '/>'
+#    print "%(lon)d, %(lat)d" % {"lon": lon, "lat": lat}
+    i += 4;
+
+print '    </trkseg>'
+print '  </trk>'
+print '</gpx>'
