@@ -21,8 +21,12 @@ if cmd == 0:
 else:
 #    f = "Самокатная, 1"
 #    t = "Зеленый проспект, 65"
-    f = "55.753317,37.808087"
-    t = "55.730810,37.736687"
+#    f = "55.753317,37.808087"
+#    t = "55.730810,37.736687"
+#    f = "55.753352,37.808067"
+#    t = "55.687334,37.555967"
+    f = "55.753352,37.808067"
+    t = "55.687747,37.556353"
 
 def handleLatLon (s):
     if len (s.translate (string.maketrans ("", ""), '0123456789.,')) == 0:
@@ -33,14 +37,16 @@ def handleLatLon (s):
 f = handleLatLon (f)
 t = handleLatLon (t)
 
-#print f + " -> " + t
+if cmd != 0:
+    print f + " -> " + t
 
 # obtain route directives
 req = urllib.quote (f)+"~"+urllib.quote (t)
-srv = "beta-maps.yandex.ru"
-url = "/ajax/route.xml?rt=" + req + "&output=js"
+srv = "maps.yandex.ru"
+url = "/?rt=" + req + "&output=js"
 
-#print url
+if cmd != 0:
+    print "http://"+srv+"/"+url
 
 conn = httplib.HTTPConnection (srv);
 conn.request ("GET", url);
@@ -48,7 +54,8 @@ r = conn.getresponse ();
 data = r.read ().replace ("\\", "")
 conn.close ();
 
-#print data;
+if cmd != 0:
+    print data;
 
 # parse data
 # segments
@@ -57,18 +64,18 @@ s_ind = data.find ("\"segments\"")
 if s_ind == -1:
     exit ()
 
-s_ind = data.find ("[", s_ind)+1;
-e_ind = data.find ("]", s_ind);
+s_ind = data.find ("[{", s_ind)+1;
+e_ind = data.find ("}]", s_ind);
 
-segs = data[s_ind+1:e_ind-1].split ("},{")
+segs = data[s_ind+1:e_ind].split ("},{")
 
 #print "Segments:"
 # parse segments
 segments = {}
 for seg in segs:
     attrs = seg.split (",")
-    lon = float (attrs[0].split (":")[2])
-    lat = float (attrs[1].split (":")[1].replace ("}", ""))
+    lon = float (attrs[0].split ("[")[1])
+    lat = float (attrs[1].split ("]")[0])
     length = float (attrs[2].split (":")[1])
     street = attrs[3].split (":")[1]
     exit = int (attrs[4].split (":")[1])
@@ -78,8 +85,9 @@ for seg in segs:
     key = key.replace (".", "")
     segments[key] = [lon, lat, length, street.replace ('"', ''), exit, dir]
 
-#    print "%(lon)f, %(lat)f, %(len)f, %(street)s, %(exit)d, %(dir)d" % { "lon": lon, "lat": lat, "len": length, "street": street, "exit": exit, "dir": dir}
-
+#     if cmd != 0:
+#         print "%(lon)f, %(lat)f, %(len)f, %(street)s, %(exit)d, %(dir)d" % { "lon": lon, "lat": lat, "len": length, "street": street, "exit": exit, "dir": dir}
+#         print key
 
 def description (s):
     res = ""
