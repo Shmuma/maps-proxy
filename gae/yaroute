@@ -121,10 +121,10 @@ pts = base64.b64decode (enc_pts, "-_");
 
 # GPX header
 result = ""
-result += '<?xml version="1.0" encoding="UTF-8"?>'
-result += '<gpx version="1.0" creator="http://maemo.shmuma.ru/proxy/yaroute" xmlns="http://www.topografix.com/GPX/1/0">'
-result += '  <trk>'
-result += '    <trkseg>'
+result += '<?xml version="1.0" encoding="UTF-8"?>'+"\n"
+result += '<gpx version="1.0" creator="http://maemo.shmuma.ru/proxy/yaroute" xmlns="http://www.topografix.com/GPX/1/0">'+"\n"
+result += '  <trk>'+"\n"
+result += '    <trkseg>'+"\n"
 
 def decode_val (a, b, c, d):
     v = ord (a)*16777216 + ord (b)*65536 + ord (c)*256 + ord (d);
@@ -144,16 +144,16 @@ while i < len(pts):
         result += ' '*6 + ('<trkpt lat="%(lat1)d.%(lat2)06d" lon="%(lon1)d.%(lon2)06d"' % { "lat1": lat // 1000000, "lat2": lat % 1000000,
                                                                                             "lon1": lon // 1000000, "lon2": lon % 1000000 })
         if key in segments:
-            result += '>'
-            result += ' '*8 + "<desc>" + description (segments[key]) + "</desc>"
-            result += ' '*6 + "</trkpt>"
+            result += '>'+"\n"
+            result += ' '*8 + "<desc>" + description (segments[key]) + "</desc>"+"\n"
+            result += ' '*6 + "</trkpt>"+"\n"
         else:
-            result += '/>'
+            result += '/>'+"\n"
     i += 8
     prev_key = key;
 
-result += '    </trkseg>'
-result += '  </trk>'
+result += '    </trkseg>'+"\n"
+result += '  </trk>'+"\n"
 result += '</gpx>'
 
 
