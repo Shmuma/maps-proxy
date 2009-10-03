@@ -39,13 +39,13 @@ if debug != 0:
 else:
     args = cgi.FieldStorage ()
 
-    if not "x" in args:
+    try:
+        x = int (args["x"].value)
+        y = int (args["y"].value)
+        z = int (args["z"].value)
+    except:
         show_help_page ()
         exit ()
-
-    x = int (args["x"].value)
-    y = int (args["y"].value)
-    z = int (args["z"].value)
 
 # obtain timestamp of last update
 ts_key = "timestamp"
@@ -66,14 +66,18 @@ else:
     key = "%(x)d-%(y)d-%(z)d" % { "x" : x, "y" : y, "z" : z}
     result = memcache.get (key)
     if result == None or ts_new == 1:
-        conn = httplib.HTTPConnection (srv)
-        conn.request ("GET", req)
-        r = conn.getresponse ()
-        result = ""
-        result += "Status: %(stat)d %(reason)s\n" % { "stat" : r.status, "reason" :r.reason }
-        result += "Content-Type: %(type)s\n" % {"type" : r.getheader ("Content-Type")}
-        result += "\n"
-        result += r.read ()
-        conn.close ()
-        memcache.set (key, result, 60*10)
-    print result
+        try:
+            conn = httplib.HTTPConnection (srv)
+            conn.request ("GET", req)
+            r = conn.getresponse ()
+            result = ""
+            result += "Status: %(stat)d %(reason)s\n" % { "stat" : r.status, "reason" :r.reason }
+            result += "Content-Type: %(type)s\n" % {"type" : r.getheader ("Content-Type")}
+            result += "\n"
+            result += r.read ()
+            conn.close ()
+            memcache.set (key, result, 60*10)
+            print result
+        except:
+            print 'Status: 404'
+            print ''
