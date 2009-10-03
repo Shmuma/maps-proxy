@@ -9,3 +9,4 @@ handlers:
 
 - url: /trf.maps.yandex
   script: trf.maps.yandex
+

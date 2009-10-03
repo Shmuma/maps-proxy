@@ -4,8 +4,10 @@ import sys
 import cgi
 import httplib
 import time
+import os
 
 from google.appengine.api import memcache
+from google.appengine.ext.webapp import template
 
 
 def get_timestamp ():
@@ -21,17 +23,26 @@ def get_timestamp ():
     return ts
 
 
+def show_help_page ():
+    path = os.path.join (os.path.dirname (__file__), "trf_index.html")
+    print (template.render (path, {}))
+
+
+
 # http://maemo.shmuma.ru/proxy/traffic.yandex?x=4955&y=2567&z=13
 # http://trf.maps.yandex.net/tiles?l=trf&x=620&y=319&z=10&tm=1241976241
 # http://trf.maps.yandex.net/trf/stat.xml
-
-cache = "/tmp/yatraffic.ts"
 debug = 0
 
 if debug != 0:
     [x,y,z] = map (int, sys.argv[1:])
 else:
     args = cgi.FieldStorage ()
+
+    if not "x" in args:
+        show_help_page ()
+        exit ()
+
     x = int (args["x"].value)
     y = int (args["y"].value)
     z = int (args["z"].value)
