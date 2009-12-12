@@ -23,6 +23,16 @@ def get_timestamp ():
     return ts
 
 
+def get_timestamp_indir ():
+    conn = httplib.HTTPConnection ("maemo.shmuma.ru")
+    conn.request ("GET", "/proxy/timestamp")
+    r = conn.getresponse ()
+
+    ts = int (r.read ())
+    conn.close ()
+    return ts  
+
+
 def show_help_page ():
     path = os.path.join (os.path.dirname (__file__), "trf_index.html")
     print (template.render (path, {}))
@@ -52,7 +62,7 @@ ts_key = "timestamp"
 ts_new = 0
 ts = memcache.get (ts_key)
 if ts == None or ts < time.time () - 60*5:
-    ts = get_timestamp ()
+    ts = get_timestamp_indir ()
     memcache.set (ts_key, ts, 60*5)
     ts_new = 1
 
@@ -81,3 +91,5 @@ else:
         except:
             print 'Status: 404'
             print ''
+    else:
+        print result

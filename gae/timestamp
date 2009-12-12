@@ -1,0 +1,20 @@
+#!/usr/bin/python
+
+import httplib
+
+
+def get_timestamp ():
+    conn = httplib.HTTPConnection ("trf.maps.yandex.net")
+    conn.request ("GET", "/trf/stat.xml")
+    r = conn.getresponse ()
+
+    for l in r.read ().split ("\n"):
+        if l.find ("jams_stat timestamp") >= 0:
+            ts = int (l.split ("\"")[1])
+
+    conn.close ()
+    return ts
+
+print 'Content-Type: text/plain'
+print ''
+print get_timestamp ()

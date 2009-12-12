@@ -7,6 +7,9 @@ handlers:
 - url: /
   script: trf.maps.yandex
 
+- url: /test
+  script: test
+
 - url: /yaroute
   script: yaroute
 
