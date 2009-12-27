@@ -62,7 +62,7 @@ ts_key = "timestamp"
 ts_new = 0
 ts = memcache.get (ts_key)
 if ts == None or ts < time.time () - 60*5:
-    ts = get_timestamp_indir ()
+    ts = get_timestamp ()
     memcache.set (ts_key, ts, 60*5)
     ts_new = 1
 
