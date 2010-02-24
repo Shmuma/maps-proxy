@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # coding=UTF8
 
+debug = 0
+
 #import cgitb; cgitb.enable()
 import sys
 import cgi
@@ -9,7 +11,8 @@ import urllib
 import base64
 import string
 
-from google.appengine.api import memcache
+if not debug:
+    from google.appengine.api import memcache
 
 # Convert array of point's attributes to string description
 def description (s):
@@ -28,12 +31,13 @@ def description (s):
 print "Content-Type: text/xml"
 print
 
-debug = 0;
-
 if debug == 0:
     args = cgi.FieldStorage ()
     f = args["from"].value.replace (" ", "")
     t = args["to"].value.replace (" ", "")
+    traffic = False
+    if "traffic" in args:
+        traffic = int(args["traffic"].value) > 0
 else:
 #    f = "Самокатная, 1"
 #    t = "Зеленый проспект, 65"
@@ -43,6 +47,7 @@ else:
 #    t = "55.687334,37.555967"
     f = "55.753352,37.808067"
     t = "55.687747,37.556353"
+    traffic = False
 
 def handleLatLon (s):
     if len (s.translate (string.maketrans ("", ""), '0123456789.,')) == 0:
@@ -61,11 +66,15 @@ req = urllib.quote (f)+"~"+urllib.quote (t)
 srv = "maps.yandex.ru"
 url = "/?rt=" + req + "&output=js"
 
-# check in memcache
-val = memcache.get (url);
-if val != None:
-    print val
-    exit ()
+if traffic:
+    url += "&l=trf"
+
+if not debug:
+    # check in memcache
+    val = memcache.get (url);
+    if val != None:
+        print val
+        exit ()
 
 if debug != 0:
     print "http://"+srv+"/"+url
@@ -156,7 +165,7 @@ result += '    </trkseg>'+"\n"
 result += '  </trk>'+"\n"
 result += '</gpx>'
 
-
-# save in memcache
-memcache.set (url, result)
+if not debug:
+    # save in memcache
+    memcache.set (url, result)
 print result
