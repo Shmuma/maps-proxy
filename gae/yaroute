@@ -42,8 +42,8 @@ if debug == 0:
     if not "from" in args or not "to" in args:
         emptyGPX ()
         exit ()
-    f = args["from"].value.replace (" ", "")
-    t = args["to"].value.replace (" ", "")
+    f = args["from"].value
+    t = args["to"].value
     traffic = True
     if "traffic" in args:
         traffic = int(args["traffic"].value) > 0
@@ -59,16 +59,18 @@ else:
     traffic = True
 
 def handleLatLon (s):
-    if len (s.translate (string.maketrans ("", ""), '0123456789.,')) == 0:
+    if len (s.translate (string.maketrans ("", ""), ' 0123456789.,')) == 0:
         v = s.split (",")
         if len (v) == 2:
             s = v[1] + "," + v[0]
         else:
-            return ""
+            return s
     else:
-        return ""
+        return s
     return s
 
+f = urllib.unquote(f)
+t = urllib.unquote(t)
 f = handleLatLon (f)
 t = handleLatLon (t)
 
@@ -96,6 +98,7 @@ if not debug:
 
 if debug != 0:
     print "http://"+srv+"/"+url
+    print urllib.unquote(url)
 
 conn = httplib.HTTPConnection (srv);
 conn.request ("GET", url);
@@ -111,6 +114,7 @@ if debug != 0:
 s_ind = data.find ("\"segments\"")
 
 if s_ind == -1:
+    emptyGPX ()
     exit ()
 
 s_ind = data.find ("[{", s_ind)+1;
