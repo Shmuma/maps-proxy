@@ -27,15 +27,24 @@ def description (s):
     res += s[3] + ", расстояние %(len).2f км." % {"len": s[2]/1000}
     return res
 
+def emptyGPX ():
+    result = '<?xml version="1.0" encoding="UTF-8"?>'+"\n"
+    result += '<gpx version="1.0" creator="http://mm-proxy.appspot.com/yaroute" xmlns="http://www.topografix.com/GPX/1/0">'+"\n"
+    result += '  <trk/>'+"\n"
+    result += '</gpx>'+"\n"
+    print result
 
 print "Content-Type: text/xml"
 print
 
 if debug == 0:
     args = cgi.FieldStorage ()
+    if not "from" in args or not "to" in args:
+        emptyGPX ()
+        exit ()
     f = args["from"].value.replace (" ", "")
     t = args["to"].value.replace (" ", "")
-    traffic = False
+    traffic = True
     if "traffic" in args:
         traffic = int(args["traffic"].value) > 0
 else:
@@ -47,16 +56,25 @@ else:
 #    t = "55.687334,37.555967"
     f = "55.753352,37.808067"
     t = "55.687747,37.556353"
-    traffic = False
+    traffic = True
 
 def handleLatLon (s):
     if len (s.translate (string.maketrans ("", ""), '0123456789.,')) == 0:
         v = s.split (",")
-        s = v[1] + "," + v[0]
+        if len (v) == 2:
+            s = v[1] + "," + v[0]
+        else:
+            return ""
+    else:
+        return ""
     return s
 
 f = handleLatLon (f)
 t = handleLatLon (t)
+
+if f == "" or t == "":
+    emptyGPX ()
+    exit ()
 
 if debug != 0:
     print f + " -> " + t
@@ -131,7 +149,7 @@ pts = base64.b64decode (enc_pts, "-_");
 # GPX header
 result = ""
 result += '<?xml version="1.0" encoding="UTF-8"?>'+"\n"
-result += '<gpx version="1.0" creator="http://maemo.shmuma.ru/proxy/yaroute" xmlns="http://www.topografix.com/GPX/1/0">'+"\n"
+result += '<gpx version="1.0" creator="http://mm-proxy.appspot.com/yaroute" xmlns="http://www.topografix.com/GPX/1/0">'+"\n"
 result += '  <trk>'+"\n"
 result += '    <trkseg>'+"\n"
 
