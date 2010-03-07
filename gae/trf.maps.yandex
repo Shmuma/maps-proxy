@@ -89,7 +89,8 @@ else:
             memcache.set (key, result, 60*10)
             print result
         except:
-            print 'Status: 404'
-            print ''
+            result = "Status: 404\n\n"
+            memcache.set (key, result, 60*10)
+            print result
     else:
         print result
