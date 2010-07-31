@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # coding=UTF8
 
-debug = 0
+debug = 1
+
+# from=55.753174,37.406403&to=55.749020,37.446831
 
 #import cgitb; cgitb.enable()
 import sys
@@ -54,9 +56,11 @@ else:
 #    t = "55.730810,37.736687"
 #    f = "55.753352,37.808067"
 #    t = "55.687334,37.555967"
-    f = "55.753352,37.808067"
-    t = "55.687747,37.556353"
-    traffic = True
+#    f = "55.753352,37.808067"
+#    t = "55.687747,37.556353"
+    f = "55.753174,37.406403"
+    t = "55.749020,37.446831"
+    traffic = False
 
 def handleLatLon (s):
     if len (s.translate (string.maketrans ("", ""), ' 0123456789.,')) == 0:
@@ -119,6 +123,8 @@ if s_ind == -1:
 
 s_ind = data.find ("[{", s_ind)+1;
 e_ind = data.find ("}]", s_ind);
+
+print data[s_ind+1:e_ind]
 
 segs = data[s_ind+1:e_ind].split ("},{")
 
