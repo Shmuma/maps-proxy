@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # coding=UTF8
 
-debug = 1
+debug = 0
 
 # from=55.753174,37.406403&to=55.749020,37.446831
 
@@ -12,6 +12,7 @@ import httplib
 import urllib
 import base64
 import string
+import json
 
 if not debug:
     from google.appengine.api import memcache
@@ -19,14 +20,14 @@ if not debug:
 # Convert array of point's attributes to string description
 def description (s):
     res = ""
-    if s[5] != 0:
-        res += ['Прямо', 'Правее', 'Направо', 'Направо', 'Разворот', 'Налево', 'Налево', 'Левее'][s[5]] + ", "
-    if s[4] != 0:
+    if s["dir"] != 0:
+        res += ['Прямо', 'Правее', 'Направо', 'Направо', 'Разворот', 'Налево', 'Налево', 'Левее'][s["dir"]] + ", "
+    if s["exit"] != 0:
         if res == "":
             res += "Съезд, "
         else:
             res += "съезд, "
-    res += s[3] + ", расстояние %(len).2f км." % {"len": s[2]/1000}
+    res += s["street"].replace ('"', '') + ", расстояние %(len).2f км." % {"len": s["distance"]/1000}
     return res
 
 def emptyGPX ():
@@ -121,27 +122,13 @@ if s_ind == -1:
     emptyGPX ()
     exit ()
 
-s_ind = data.find ("[{", s_ind)+1;
-e_ind = data.find ("}]", s_ind);
+s_ind = data.find ("[{", s_ind);
+e_ind = data.find ("}]", s_ind)+2;
 
-print data[s_ind+1:e_ind]
-
-segs = data[s_ind+1:e_ind].split ("},{")
-
-# parse segments
 segments = {}
-for seg in segs:
-    attrs = seg.split (",")
-    lon = float (attrs[0].split ("[")[1])
-    lat = float (attrs[1].split ("]")[0])
-    length = float (attrs[2].split (":")[1])
-    street = attrs[3].split (":")[1]
-    exit = int (attrs[4].split (":")[1])
-    dir  = int (attrs[5].split (":")[1])
-
-    key = "%(lon)0.6f,%(lat)0.6f" % { "lon": lon, "lat": lat }
-    key = key.replace (".", "")
-    segments[key] = [lon, lat, length, street.replace ('"', ''), exit, dir]
+for seg in json.read (data[s_ind:e_ind]):
+    key = ("%(lon)0.6f,%(lat)0.6f" % { "lon": seg["ll"][0], "lat": seg["ll"][1] }).replace (".", "")
+    segments[key] = seg
 
 # encoded points
 s_ind = data.find ('"encodedPoints"')
