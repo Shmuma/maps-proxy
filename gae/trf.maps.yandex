@@ -11,7 +11,7 @@ from google.appengine.ext.webapp import template
 
 
 def get_timestamp ():
-    conn = httplib.HTTPConnection ("trf.maps.yandex.net")
+    conn = httplib.HTTPConnection ("jgo.maps.yandex.net")
     conn.request ("GET", "/trf/stat.xml")
     r = conn.getresponse ()
 
@@ -40,8 +40,8 @@ def show_help_page ():
 
 
 # http://maemo.shmuma.ru/proxy/traffic.yandex?x=4955&y=2567&z=13
-# http://trf.maps.yandex.net/tiles?l=trf&x=620&y=319&z=10&tm=1241976241
-# http://trf.maps.yandex.net/trf/stat.xml
+# http://jgo.maps.yandex.net/tiles?l=trf&x=620&y=319&z=10&tm=1241976241
+# http://jgo.maps.yandex.net/trf/stat.xml
 debug = 0
 
 if debug != 0:
@@ -67,7 +67,7 @@ if ts == None or ts < time.time () - 60*5:
     ts_new = 1
 
 # get tile data
-srv = "trf.maps.yandex.net"
+srv = "jgo.maps.yandex.net"
 req = "/tiles?l=trf&x=%(x)d&y=%(y)d&z=%(z)d&tm=%(tm)d" % { "x" : x, "y" : y, "z" : z, "tm" : ts}
 
 if debug > 0:
