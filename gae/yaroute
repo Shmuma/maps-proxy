@@ -89,7 +89,7 @@ if debug != 0:
 # obtain route directives
 req = urllib.quote (f)+"~"+urllib.quote (t)
 srv = "maps.yandex.ru"
-url = "/?rt=" + req + "&output=js"
+url = "/?rt=" + req
 
 if traffic:
     url += "&l=trf"
